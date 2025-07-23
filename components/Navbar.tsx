@@ -11,7 +11,10 @@ export function Navbar() {
   return (
     <header className="border-b shadow-sm relative z-50">
       <div className="flex justify-between items-center px-6 py-4">
-        <h1 className="text-2xl font-bold tracking-wide">🌊 Sea Safetly</h1>
+        <div className="flex gap-8">
+          <ThemeSwitcher />
+          <h1 className="text-xl font-bold tracking-wide">🌊 Sea Safetly</h1>
+        </div>
         <div className="lg:hidden">
           <button onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Menu">
             {isOpen ? <X size={28} /> : <Menu size={28} />}
@@ -23,7 +26,6 @@ export function Navbar() {
           <Link href="/psychology">Psychological Help</Link>
           <Link href="/materials">Materials</Link>
           <Link href="/admin">Admin</Link>
-          <ThemeSwitcher />
         </nav>
       </div>
 
@@ -52,7 +54,6 @@ export function Navbar() {
           >
             <X size={28} />
           </button>
-          <ThemeSwitcher/>
         </div>
       )}
     </header>
