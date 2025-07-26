@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Navbar } from "@/components/Navbar";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,6 +27,7 @@ export default function RootLayout({
           <main className="flex items-center justify-center min-h-[calc(100vh-80px)] p-8">
             {children}
           </main>
+        <Toaster position="top-center"/>
         </ThemeProvider>
       </body>
     </html>
