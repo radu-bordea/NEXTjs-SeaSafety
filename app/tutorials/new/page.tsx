@@ -2,7 +2,7 @@ import NewTutorialForm from "./tutorial-form";
 
 const NewTutorialPage = () => {
   return (
-    <div className="min-h-screen bg-blue-50 flex items-center justify-center px-4">
+    <div className="min-h-screen w-full flex items-center justify-center px-4">
       <NewTutorialForm/>
     </div>
   );

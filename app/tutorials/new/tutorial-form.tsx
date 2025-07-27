@@ -21,28 +21,28 @@ const NewTutorialForm = () => {
   }, [state.success, router]);
 
   return (
-    <div className="w-full max-w-md bg-white shadow-md rounded-lg p-8 border border-gray-200">
-      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">
+    <div className="w-full max-w-md shadow-md rounded-lg p-8 border">
+      <h1 className="text-3xl font-bold mb-6 text-center">
         Submit a Tutorial
       </h1>
       {state.message && !state.success && (
         <p className="text-red-500 mb-4 text-center">{state.message}</p>
       )}
-      <form action={formAction} className="space-y-4 text-gray-700">
+      <form action={formAction} className="space-y-4">
         <input
-          className="w-full border border-gray-200 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           type="text"
           name="subject"
           placeholder="subject"
         />
         <textarea
-          className="w-full border border-gray-200 p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full border p-3 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           name="description"
           placeholder="Describe your issue"
           rows={4}
         />
         <button
-          className="w-full bg-blue-600 text-white p-3 rounded hover:bg-blue-700 transition disabled:opacity-50"
+          className="w-full bg-blue-400 hover:bg-blue-500 text-white p-3 rounded transition disabled:opacity-50"
           type="submit"
         >
           Submit
