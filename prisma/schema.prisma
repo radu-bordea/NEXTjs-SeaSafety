@@ -1,3 +1,5 @@
+
+
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -18,6 +20,7 @@ model Tutorial {
   id          Int      @id @default(autoincrement())
   subject     String
   description String
+  videoUrl  String 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

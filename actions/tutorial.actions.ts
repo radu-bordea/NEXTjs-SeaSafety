@@ -1,80 +1,78 @@
 "use server";
-// Marks this module or function to be executed **on the server side** in Next.js (required for server actions)
 
-// Import the Prisma client from your app directory to interact with the database
-import { prisma } from "@/app/db/prisma";
-
-// Import `revalidatePath` from Next.js to manually revalidate a specific route in the static cache
-import { revalidatePath } from "next/cache";
+import { prisma } from "@/app/db/prisma"; // Import Prisma instance for database interaction
+import { revalidatePath } from "next/cache"; // Used to refresh the cache of a specific path
 
 /**
  * Server action to create a new tutorial entry.
- * This function is designed to work with server-side form submissions (e.g., using <form action={createTutorial}>).
- *
- * @param prevState - Previous submission state, useful for form status and error handling
- * @param formData - The FormData object containing submitted form fields
- * @returns An object indicating whether the creation was successful and a message
+ * This function will be triggered by a form submission from the client side.
  */
 export async function createTutorial(
-  prevState: { success: boolean; message: string }, // Prior state passed from the form (progressive enhancement)
-  formData: FormData // Incoming form data from the browser
+  prevState: { success: boolean; message: string }, // Previous form state (used by useActionState)
+  formData: FormData // Form data submitted from the client
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // Extract individual fields from the form data
-    const subject = formData.get("subject") as string; // The subject/title of the tutorial
-    const description = formData.get("description") as string; // The tutorial description or content
+    // Extract form fields
+    const subject = formData.get("subject") as string;
+    const description = formData.get("description") as string;
+    const videoUrl = formData.get("videoUrl") as string;
 
-    // Validate that both required fields are present
-    if (!subject || !description) {
-      console.log("Missing tutorial fields"); // Log issue for debugging
-      return { success: false, message: "All fields are required" }; // Return validation error
+    // --- Basic Validation ---
+    // Make sure all fields are filled
+    if (!subject || !description || !videoUrl) {
+      console.warn("Validation error: missing fields");
+      return { success: false, message: "All fields are required." };
     }
 
-    // Create a new tutorial entry in the database using Prisma
-    const tutorial = await prisma.tutorial.create({
-      data: { subject, description }, // Map submitted values to the database schema
+    // Validate YouTube URL format (youtube.com or youtu.be links)
+    const isValidYouTubeUrl =
+      /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)/.test(videoUrl);
+    if (!isValidYouTubeUrl) {
+      console.warn("Validation error: invalid YouTube URL");
+      return { success: false, message: "Invalid YouTube URL format." };
+    }
+
+    // --- Create Tutorial in DB ---
+    await prisma.tutorial.create({
+      data: {
+        subject, // Title of the tutorial
+        description, // Description or content
+        videoUrl, // YouTube video link
+      },
     });
 
-    // Revalidate the "/tutorials" path so that newly added tutorials are visible on the frontend
+    // Revalidate the cache for /tutorials so the new entry shows up immediately
     revalidatePath("/tutorials");
 
-    // Return success state to the form handler
-    return { success: true, message: "Tutorial created successfully" };
+    // Return success state to client
+    return {
+      success: true,
+      message: "Tutorial created successfully.",
+    };
   } catch (error) {
-    // Catch and log any errors (e.g., database errors)
-    console.log("An error occured while creating the tutorial", error);
-
-    // Return failure response to the form
+    // Handle any unexpected error
+    console.error("Error creating tutorial:", error);
     return {
       success: false,
-      message: "An error occured while creating the tutorial",
+      message: "An error occurred while creating the tutorial.",
     };
   }
 }
 
 /**
- * Fetches a list of all tutorials from the database, ordered by creation date.
- * Can be used on the server side to display tutorial lists in pages, APIs, etc.
- *
- * @returns An array of tutorials (empty if an error occurs)
+ * Server function to fetch all tutorials from the database.
  */
 export async function getTutorials() {
   try {
-    // Use Prisma to fetch all tutorials, sorted with newest first
+    // Query all tutorials, most recent first
     const tutorials = await prisma.tutorial.findMany({
-      orderBy: { createdAt: "desc" }, // Sort tutorials from newest to oldest
+      orderBy: { createdAt: "desc" },
     });
 
-    // Log the number of tutorials fetched
-    console.log("Fetched tutorial list", `${tutorials.length}`);
-
-    // Return the list of tutorials to the caller
+    console.log("Fetched tutorials:", tutorials.length); // Debug: how many were fetched
     return tutorials;
   } catch (error) {
-    // Log any error encountered while fetching
-    console.log("Error fetching tutorials", error);
-
-    // Return an empty array as a safe fallback (prevents frontend crashes)
-    return [];
+    console.error("Error fetching tutorials:", error);
+    return []; // Return empty array on error so UI won't crash
   }
 }

@@ -16,5 +16,6 @@
 # browser studio
 - npx prisma studio
 
+
 # Setup Prisma Global to avoid prisma instance duplication
 - created a folder db in app and inside a prisma.ts file
