@@ -76,3 +76,20 @@ export async function getTutorials() {
     return []; // Return empty array on error so UI won't crash
   }
 }
+
+export async function getTutorialById(id: string) {
+  try {
+    const tutorial = await prisma.tutorial.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!tutorial) {
+      console.log("Tutorial not found");
+    }
+
+    return tutorial;
+  } catch (error) {
+    console.log("Error fetching tutorial details", error);
+    return null;
+  }
+}
