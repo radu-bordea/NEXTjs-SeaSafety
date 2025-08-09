@@ -3,6 +3,10 @@
 
 # Dependecies
 - npm i next-themes
+- npm i bcryptjs jose cookie
+
+# Generate a secret
+- openssl rand -base64 32
 
 # Prisma Install
 - npm i prisma @prisma/client
@@ -10,6 +14,9 @@
 - npx prisma init
 - npx prisma migrate dev --name init 
 - npx prisma generate
+- npx prisma migrate reset
+- npx prisma migrate dev --name add-tutorial-relation
+
 # Setup in package.json scripts
 - "postinstall": "prisma generate"
 
