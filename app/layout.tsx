@@ -2,8 +2,8 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-import { Navbar } from "@/components/Navbar";
 import { Toaster } from "sonner";
+import NavbarWrapper from "@/components/NavbarWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,7 +23,7 @@ export default function RootLayout({
         className={`${inter.className} bg-background text-foreground transition-colors duration-300`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Navbar />
+          <NavbarWrapper/>
           <main className="flex items-center justify-center min-h-[calc(100vh-80px)] p-8">
             {children}
           </main>
