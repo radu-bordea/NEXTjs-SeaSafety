@@ -1,6 +1,7 @@
 "use server";
 
 import { prisma } from "@/app/db/prisma"; // Import Prisma instance for database interaction
+import { getCurrentuser } from "@/app/lib/current-user";
 import { revalidatePath } from "next/cache"; // Used to refresh the cache of a specific path
 
 /**
@@ -12,6 +13,32 @@ export async function createTutorial(
   formData: FormData // Form data submitted from the client
 ): Promise<{ success: boolean; message: string }> {
   try {
+    // ✅ Check if user is logged in
+    const user = await getCurrentuser();
+    if (!user) {
+      return {
+        success: false,
+        message: "You must be logged in to add tutorials.",
+      };
+    }
+
+    // ✅ Check if user is allowed (hardcoded for now)
+    const allowedAdmins = [
+      { name: "radu", email: "radu@gmail.com" },
+      { name: "otherAdmin", email: "otheradmin@example.com" }, // optional second admin
+    ];
+
+    const isAllowed = allowedAdmins.some(
+      (admin) => admin.name === user.name && admin.email === user.email
+    );
+
+    if (!isAllowed) {
+      return {
+        success: false,
+        message: "You are not authorized to create tutorials.",
+      };
+    }
+
     // Extract form fields
     const subject = formData.get("subject") as string;
     const description = formData.get("description") as string;

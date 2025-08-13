@@ -1,10 +1,10 @@
-import NewTutorialForm from "./tutorial-form"; // Import the form component
+import NewTutorialForm from "./tutorial-form"; // Import the tutorial form component
 
 const NewTutorialPage = () => {
   return (
-    // Full-screen height container, centered horizontally and vertically
+    // Full-page container to center the form
     <div className="min-h-screen w-full flex items-center justify-center px-4">
-      {/* Render the form component */}
+      {/* Render the tutorial submission form */}
       <NewTutorialForm />
     </div>
   );

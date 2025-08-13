@@ -16,6 +16,7 @@
 - npx prisma generate
 - npx prisma migrate reset
 - npx prisma migrate dev --name add-tutorial-relation
+npx prisma migrate dev --name refactor without user
 
 # Setup in package.json scripts
 - "postinstall": "prisma generate"

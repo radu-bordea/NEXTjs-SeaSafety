@@ -1,70 +1,70 @@
-import { getTutorials } from "@/actions/tutorial.actions"; // Import the function to fetch tutorials from the database
-import Link from "next/link"; // Used to link to other pages in the app (client-side navigation)
+import { getTutorials } from "@/actions/tutorial.actions"; // Fetch tutorials from the server
+import { getCurrentuser } from "@/app/lib/current-user"; // Fetch currently logged-in user
+import Link from "next/link";
 
-// Helper function to convert YouTube URLs to an embeddable format
+// Helper function to convert YouTube URLs to embeddable format
 const getYoutubeEmbedUrl = (url: string): string | null => {
   try {
-    const urlObj = new URL(url); // Parse the provided URL
-    const videoId = urlObj.searchParams.get("v"); // Try to get the video ID from a regular YouTube URL (?v=abc123)
-
-    if (videoId) return `https://www.youtube.com/embed/${videoId}`; // Return embed format if video ID is found
-
-    // If the URL is a shortened youtu.be link
+    const urlObj = new URL(url); // Parse the URL
+    const videoId = urlObj.searchParams.get("v"); // Get video ID for standard YouTube links
+    if (videoId) return `https://www.youtube.com/embed/${videoId}`;
     if (urlObj.hostname === "youtu.be")
-      return `https://www.youtube.com/embed/${urlObj.pathname.slice(1)}`; // Strip the slash to get the video ID
-  } catch {
-    return null; // Return null if URL is invalid or parsing fails
-  }
-
-  return null; // Fallback return
+      // Handle shortened YouTube links
+      return `https://www.youtube.com/embed/${urlObj.pathname.slice(1)}`;
+  } catch {}
+  return null; // Return null if URL is invalid
 };
 
-// Async server component that renders the tutorials page
 const TutorialsPage = async () => {
-  const tutorials = await getTutorials(); // Fetch all tutorials from the DB
+  const tutorials = await getTutorials(); // Fetch all tutorials
+  const user = await getCurrentuser(); // Fetch logged-in user
+
+  // ✅ Check if the user is Radu (admin)
+  const isRadu =
+    user?.name?.toLowerCase() === "radu" &&
+    user?.email?.toLowerCase() === "radu@gmail.com";
 
   return (
     <div className="min-h-screen w-full px-8 py-8">
-      {/* Page Title */}
+      {/* Page heading */}
       <h1 className="text-3xl font-bold mb-8 text-center">Tutorials</h1>
 
-      {/* "Add New Tutorial" Button */}
-      <div className="w-full max-w-6xl mx-auto mb-6">
-        <Link
-          href="/tutorials/new"
-          className="block w-full bg-blue-400 hover:bg-blue-500 text-white text-center py-3 rounded-lg font-semibold transition"
-        >
-          ➕ Add New Tutorial
-        </Link>
-      </div>
+      {/* Radu-only "Add New Tutorial" button */}
+      {isRadu && (
+        <div className="w-full max-w-6xl mx-auto mb-6">
+          <Link
+            href="/tutorials/new"
+            className="block w-full bg-blue-400 hover:bg-blue-500 text-white text-center py-3 rounded-lg font-semibold transition"
+          >
+            ➕ Add New Tutorial
+          </Link>
+        </div>
+      )}
 
-      {/* Conditional: Show message if no tutorials */}
+      {/* Display tutorials or a "No Tutorials" message */}
       {tutorials.length === 0 ? (
         <p className="text-center text-gray-600">No Tutorials yet</p>
       ) : (
-        // Tutorials list
         <div className="w-full max-w-6xl mx-auto space-y-8">
           {tutorials.map((tutorial) => {
-            const embedUrl = getYoutubeEmbedUrl(tutorial.videoUrl); // Convert YouTube link to embed
-
+            const embedUrl = getYoutubeEmbedUrl(tutorial.videoUrl); // Convert video URL to embed URL
             return (
               <div
                 key={tutorial.id}
                 className="rounded-xl shadow border p-6 space-y-6"
               >
-                {/* Row 1: Tutorial Title */}
+                {/* Tutorial subject */}
                 <h2 className="text-2xl font-semibold text-center">
                   {tutorial.subject}
                 </h2>
 
-                {/* Row 2: Description and Video split into two columns (stacked on mobile) */}
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Left Column: Description (25% width on desktop) */}
+                  {/* Description */}
                   <div className="w-full md:w-1/4">
                     <p className="text-base">{tutorial.description}</p>
                   </div>
 
-                  {/* Right Column: Embedded YouTube Video (75% width on desktop) */}
+                  {/* Video iframe */}
                   <div className="w-full md:w-3/4">
                     {embedUrl ? (
                       <div className="aspect-w-16 aspect-h-9">
