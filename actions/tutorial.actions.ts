@@ -1,19 +1,19 @@
 "use server";
 
-import { prisma } from "@/app/db/prisma"; // Import Prisma instance for database interaction
-import { getCurrentuser } from "@/app/lib/current-user";
-import { revalidatePath } from "next/cache"; // Used to refresh the cache of a specific path
+import { prisma } from "@/app/db/prisma"; // Prisma client instance for DB operations
+import { getCurrentuser } from "@/app/lib/current-user"; // Utility to get the logged-in user
+import { revalidatePath } from "next/cache"; // Refreshes cache for a given route
 
 /**
- * Server action to create a new tutorial entry.
- * This function will be triggered by a form submission from the client side.
+ * Creates a new tutorial entry in the database.
+ * This function is triggered from a form submission on the client side.
  */
 export async function createTutorial(
-  prevState: { success: boolean; message: string }, // Previous form state (used by useActionState)
-  formData: FormData // Form data submitted from the client
+  prevState: { success: boolean; message: string }, // Previous form state (useActionState hook)
+  formData: FormData // Data from the submitted form
 ): Promise<{ success: boolean; message: string }> {
   try {
-    // ✅ Check if user is logged in
+    // 1️⃣ Verify that a user is logged in
     const user = await getCurrentuser();
     if (!user) {
       return {
@@ -22,12 +22,11 @@ export async function createTutorial(
       };
     }
 
-    // ✅ Check if user is allowed (hardcoded for now)
+    // 2️⃣ Check if the user is allowed to create tutorials (hardcoded admin list)
     const allowedAdmins = [
       { name: "radu", email: "radu@gmail.com" },
-      { name: "otherAdmin", email: "otheradmin@example.com" }, // optional second admin
+      { name: "otherAdmin", email: "otheradmin@example.com" }, // optional 2nd admin
     ];
-
     const isAllowed = allowedAdmins.some(
       (admin) => admin.name === user.name && admin.email === user.email
     );
@@ -39,19 +38,18 @@ export async function createTutorial(
       };
     }
 
-    // Extract form fields
+    // 3️⃣ Extract submitted fields
     const subject = formData.get("subject") as string;
     const description = formData.get("description") as string;
     const videoUrl = formData.get("videoUrl") as string;
 
-    // --- Basic Validation ---
-    // Make sure all fields are filled
+    // 4️⃣ Validate that all required fields are provided
     if (!subject || !description || !videoUrl) {
       console.warn("Validation error: missing fields");
       return { success: false, message: "All fields are required." };
     }
 
-    // Validate YouTube URL format (youtube.com or youtu.be links)
+    // 5️⃣ Validate that the provided URL is a valid YouTube link
     const isValidYouTubeUrl =
       /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)/.test(videoUrl);
     if (!isValidYouTubeUrl) {
@@ -59,25 +57,17 @@ export async function createTutorial(
       return { success: false, message: "Invalid YouTube URL format." };
     }
 
-    // --- Create Tutorial in DB ---
+    // 6️⃣ Create the tutorial record in the database
     await prisma.tutorial.create({
-      data: {
-        subject, // Title of the tutorial
-        description, // Description or content
-        videoUrl, // YouTube video link
-      },
+      data: { subject, description, videoUrl },
     });
 
-    // Revalidate the cache for /tutorials so the new entry shows up immediately
+    // 7️⃣ Refresh the /tutorials page so the new entry appears immediately
     revalidatePath("/tutorials");
 
-    // Return success state to client
-    return {
-      success: true,
-      message: "Tutorial created successfully.",
-    };
+    return { success: true, message: "Tutorial created successfully." };
   } catch (error) {
-    // Handle any unexpected error
+    // Log and return an error state
     console.error("Error creating tutorial:", error);
     return {
       success: false,
@@ -87,23 +77,26 @@ export async function createTutorial(
 }
 
 /**
- * Server function to fetch all tutorials from the database.
+ * Fetch all tutorials from the database, sorted by newest first.
  */
 export async function getTutorials() {
   try {
-    // Query all tutorials, most recent first
     const tutorials = await prisma.tutorial.findMany({
       orderBy: { createdAt: "desc" },
     });
 
-    console.log("Fetched tutorials:", tutorials.length); // Debug: how many were fetched
+    console.log("Fetched tutorials:", tutorials.length); // Debug count
     return tutorials;
   } catch (error) {
     console.error("Error fetching tutorials:", error);
-    return []; // Return empty array on error so UI won't crash
+    return []; // Return empty array so the UI won't crash
   }
 }
 
+/**
+ * Fetch a single tutorial by ID.
+ * @param id - The ID of the tutorial to retrieve
+ */
 export async function getTutorialById(id: string) {
   try {
     const tutorial = await prisma.tutorial.findUnique({
@@ -118,5 +111,39 @@ export async function getTutorialById(id: string) {
   } catch (error) {
     console.log("Error fetching tutorial details", error);
     return null;
+  }
+}
+
+/**
+ * Delete a tutorial by ID (only allowed for admin 'Radu').
+ * @param id - The ID of the tutorial to delete
+ */
+export async function deleteTutorial(id: number) {
+  try {
+    // 1️⃣ Verify user is logged in
+    const user = await getCurrentuser();
+    if (!user) {
+      return { success: false, message: "Not logged in" };
+    }
+
+    // 2️⃣ Check if the user is Radu (admin)
+    const isRadu =
+      user.name?.toLowerCase() === "radu" &&
+      user.email?.toLowerCase() === "radu@gmail.com";
+
+    if (!isRadu) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    // 3️⃣ Delete the tutorial from DB
+    await prisma.tutorial.delete({ where: { id } });
+
+    // 4️⃣ Revalidate the /tutorials page so UI updates immediately
+    revalidatePath("/tutorials");
+
+    return { success: true, message: "Tutorial deleted" };
+  } catch (error) {
+    console.error("Error deleting tutorial:", error);
+    return { success: false, message: "Error deleting tutorial" };
   }
 }

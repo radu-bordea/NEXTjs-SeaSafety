@@ -1,35 +1,51 @@
-import { getTutorials } from "@/actions/tutorial.actions"; // Fetch tutorials from the server
-import { getCurrentuser } from "@/app/lib/current-user"; // Fetch currently logged-in user
+import { getTutorials } from "@/actions/tutorial.actions";
+import { getCurrentuser } from "@/app/lib/current-user";
 import Link from "next/link";
+import DeleteTutorialButton from "@/components/DeleteTutorialButton"; // client component for deletion
 
-// Helper function to convert YouTube URLs to embeddable format
+/**
+ * Converts a YouTube watch or short link to an embeddable URL.
+ * Supports:
+ *  - https://www.youtube.com/watch?v=VIDEO_ID
+ *  - https://youtu.be/VIDEO_ID
+ */
 const getYoutubeEmbedUrl = (url: string): string | null => {
   try {
-    const urlObj = new URL(url); // Parse the URL
-    const videoId = urlObj.searchParams.get("v"); // Get video ID for standard YouTube links
+    const urlObj = new URL(url);
+
+    // Check for watch?v=VIDEO_ID format
+    const videoId = urlObj.searchParams.get("v");
     if (videoId) return `https://www.youtube.com/embed/${videoId}`;
-    if (urlObj.hostname === "youtu.be")
-      // Handle shortened YouTube links
+
+    // Check for youtu.be/VIDEO_ID format
+    if (urlObj.hostname === "youtu.be") {
       return `https://www.youtube.com/embed/${urlObj.pathname.slice(1)}`;
-  } catch {}
-  return null; // Return null if URL is invalid
+    }
+  } catch {
+    // Invalid URL format
+    return null;
+  }
+
+  // Fallback for non-YouTube links or unrecognized formats
+  return null;
 };
 
 const TutorialsPage = async () => {
-  const tutorials = await getTutorials(); // Fetch all tutorials
-  const user = await getCurrentuser(); // Fetch logged-in user
+  // Fetch tutorials and current logged-in user
+  const tutorials = await getTutorials();
+  const user = await getCurrentuser();
 
-  // ✅ Check if the user is Radu (admin)
+  // Only allow edit/delete if the user is "Radu"
   const isRadu =
     user?.name?.toLowerCase() === "radu" &&
     user?.email?.toLowerCase() === "radu@gmail.com";
 
   return (
     <div className="min-h-screen w-full px-8 py-8">
-      {/* Page heading */}
+      {/* Page title */}
       <h1 className="text-3xl font-bold mb-8 text-center">Tutorials</h1>
 
-      {/* Radu-only "Add New Tutorial" button */}
+      {/* Add tutorial button for Radu */}
       {isRadu && (
         <div className="w-full max-w-6xl mx-auto mb-6">
           <Link
@@ -41,13 +57,14 @@ const TutorialsPage = async () => {
         </div>
       )}
 
-      {/* Display tutorials or a "No Tutorials" message */}
+      {/* No tutorials found */}
       {tutorials.length === 0 ? (
         <p className="text-center text-gray-600">No Tutorials yet</p>
       ) : (
         <div className="w-full max-w-6xl mx-auto space-y-8">
           {tutorials.map((tutorial) => {
-            const embedUrl = getYoutubeEmbedUrl(tutorial.videoUrl); // Convert video URL to embed URL
+            const embedUrl = getYoutubeEmbedUrl(tutorial.videoUrl);
+
             return (
               <div
                 key={tutorial.id}
@@ -59,12 +76,8 @@ const TutorialsPage = async () => {
                 </h2>
 
                 <div className="flex flex-col md:flex-row gap-6">
-                  {/* Description */}
-                  <div className="w-full md:w-1/4">
-                    <p className="text-base">{tutorial.description}</p>
-                  </div>
 
-                  {/* Video iframe */}
+                  {/* Left side: video preview or error */}
                   <div className="w-full md:w-3/4">
                     {embedUrl ? (
                       <div className="aspect-w-16 aspect-h-9">
@@ -81,6 +94,19 @@ const TutorialsPage = async () => {
                       </p>
                     )}
                   </div>
+
+                  {/* Right side: description + delete button */}
+                  <div className="w-full md:w-1/4">
+                    <p className="text-base">{tutorial.description}</p>
+
+                    {isRadu && (
+                      <DeleteTutorialButton tutorialId={tutorial.id} />
+                    )}
+                  </div>
+
+                  
+
+
                 </div>
               </div>
             );
