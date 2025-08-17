@@ -2,6 +2,7 @@ import { getTutorials } from "@/actions/tutorial.actions";
 import { getCurrentuser } from "@/app/lib/current-user";
 import Link from "next/link";
 import DeleteTutorialButton from "@/components/DeleteTutorialButton"; // client component for deletion
+import { isAdmin } from "@/app/lib/admins";
 
 /**
  * Converts a YouTube watch or short link to an embeddable URL.
@@ -22,12 +23,10 @@ const getYoutubeEmbedUrl = (url: string): string | null => {
       return `https://www.youtube.com/embed/${urlObj.pathname.slice(1)}`;
     }
   } catch {
-    // Invalid URL format
-    return null;
+    return null; // Invalid URL
   }
 
-  // Fallback for non-YouTube links or unrecognized formats
-  return null;
+  return null; // Not YouTube or unrecognized
 };
 
 const TutorialsPage = async () => {
@@ -35,18 +34,16 @@ const TutorialsPage = async () => {
   const tutorials = await getTutorials();
   const user = await getCurrentuser();
 
-  // Only allow edit/delete if the user is "Radu"
-  const isRadu =
-    user?.name?.toLowerCase() === "radu" &&
-    user?.email?.toLowerCase() === "radu@gmail.com";
+  // ✅ Centralized admin check
+  const canManage = isAdmin(user?.email);
 
   return (
     <div className="min-h-screen w-full px-8 py-8">
       {/* Page title */}
       <h1 className="text-3xl font-bold mb-8 text-center">Tutorials</h1>
 
-      {/* Add tutorial button for Radu */}
-      {isRadu && (
+      {/* Add tutorial button for admins */}
+      {canManage && (
         <div className="w-full max-w-6xl mx-auto mb-6">
           <Link
             href="/tutorials/new"
@@ -76,7 +73,6 @@ const TutorialsPage = async () => {
                 </h2>
 
                 <div className="flex flex-col md:flex-row gap-6">
-
                   {/* Left side: video preview or error */}
                   <div className="w-full md:w-3/4">
                     {embedUrl ? (
@@ -99,14 +95,10 @@ const TutorialsPage = async () => {
                   <div className="w-full md:w-1/4">
                     <p className="text-base">{tutorial.description}</p>
 
-                    {isRadu && (
+                    {canManage && (
                       <DeleteTutorialButton tutorialId={tutorial.id} />
                     )}
                   </div>
-
-                  
-
-
                 </div>
               </div>
             );

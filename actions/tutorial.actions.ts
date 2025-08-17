@@ -3,6 +3,7 @@
 import { prisma } from "@/app/db/prisma"; // Prisma client instance for DB operations
 import { getCurrentuser } from "@/app/lib/current-user"; // Utility to get the logged-in user
 import { revalidatePath } from "next/cache"; // Refreshes cache for a given route
+import { isAdmin } from "@/app/lib/admins";
 
 /**
  * Creates a new tutorial entry in the database.
@@ -22,16 +23,7 @@ export async function createTutorial(
       };
     }
 
-    // 2️⃣ Check if the user is allowed to create tutorials (hardcoded admin list)
-    const allowedAdmins = [
-      { name: "radu", email: "radu@gmail.com" },
-      { name: "otherAdmin", email: "otheradmin@example.com" }, // optional 2nd admin
-    ];
-    const isAllowed = allowedAdmins.some(
-      (admin) => admin.name === user.name && admin.email === user.email
-    );
-
-    if (!isAllowed) {
+    if (!isAdmin(user.email)) {
       return {
         success: false,
         message: "You are not authorized to create tutorials.",
@@ -126,13 +118,9 @@ export async function deleteTutorial(id: number) {
       return { success: false, message: "Not logged in" };
     }
 
-    // 2️⃣ Check if the user is Radu (admin)
-    const isRadu =
-      user.name?.toLowerCase() === "radu" &&
-      user.email?.toLowerCase() === "radu@gmail.com";
-
-    if (!isRadu) {
-      return { success: false, message: "Unauthorized" };
+    // Check if is admin
+    if(!isAdmin(user.email)) {
+      return {success: false, message:"Unauthorized"}
     }
 
     // 3️⃣ Delete the tutorial from DB

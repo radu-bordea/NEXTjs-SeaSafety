@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyAuthToken } from "./app/lib/auth"; // adjust path if needed
+import { isAdmin } from "./app/lib/admins"; // make sure this points to the helper
 
-// Routes that require login
+// Routes that require any logged-in user
 const protectedRoutes = ["/tutorials", "/materials"];
-// Routes only Radu can access
-const raduOnlyRoutes = ["/tutorials/new"];
+
+// Routes only admins can access
+const adminOnlyRoutes = ["/tutorials/new"];
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl.clone();
@@ -13,11 +15,11 @@ export async function middleware(req: NextRequest) {
   // Get token from cookie
   const token = req.cookies.get("auth-token")?.value;
 
-  // If no token → redirect to login on protected routes
+  // If no token → redirect to login on protected/admin routes
   if (!token) {
     if (
       protectedRoutes.some((route) => req.nextUrl.pathname.startsWith(route)) ||
-      raduOnlyRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
+      adminOnlyRoutes.some((route) => req.nextUrl.pathname.startsWith(route))
     ) {
       url.pathname = "/login";
       return NextResponse.redirect(url);
@@ -34,17 +36,17 @@ export async function middleware(req: NextRequest) {
       email: string;
     }>(token);
   } catch {
-    // If invalid token → redirect to login
+    // Invalid token → redirect to login
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  // Protect Radu-only routes
+  // Protect admin-only routes
   if (
-    raduOnlyRoutes.some((route) => req.nextUrl.pathname.startsWith(route)) &&
-    (user.name?.toLowerCase() !== "radu" || user.email?.toLowerCase() !== "radu@gmail.com")
+    adminOnlyRoutes.some((route) => req.nextUrl.pathname.startsWith(route)) &&
+    !isAdmin(user.email)
   ) {
-    // Redirect non-Radu users to tutorials
+    // Redirect non-admins to tutorials
     url.pathname = "/tutorials";
     return NextResponse.redirect(url);
   }
