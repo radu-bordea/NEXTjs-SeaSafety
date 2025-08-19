@@ -5,9 +5,14 @@ import { Navbar } from "./Navbar";
 export default async function NavbarWrapper() {
   const user = await getCurrentuser();
 
-  const navbarUser =
-    user === null ? null : { ...user, name: user.name ?? "Unknown" }; // replace null with default
+  // Normalize user object
+  const navbarUser = user
+    ? {
+        id: user.id,
+        email: user.email,
+        name: user.name || user.email.split("@")[0], // fallback: show part of email
+      }
+    : null;
 
   return <Navbar user={navbarUser} />;
 }
-

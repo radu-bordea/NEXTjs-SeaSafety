@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect, useActionState } from "react";
 import { useRouter } from "next/navigation";
 import { logoutUser } from "@/actions/auth.actions";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import ThemeSwitcher from "./ThemeSwitcher";
 import { toast } from "sonner";
 
@@ -16,12 +16,7 @@ export function Navbar({ user }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
-  const initialState = {
-    success: false,
-    message: "",
-  };
-
-  // ✅ Correct useActionState usage
+  const initialState = { success: false, message: "" };
   const [state, formAction] = useActionState(logoutUser, initialState);
 
   useEffect(() => {
@@ -36,10 +31,13 @@ export function Navbar({ user }: NavbarProps) {
   return (
     <header className="border-b shadow-sm relative z-50">
       <div className="flex justify-between items-center px-6 py-4">
-        <div className="flex gap-8">
+        {/* Left side */}
+        <div className="flex gap-8 items-center">
           <ThemeSwitcher />
           <h1 className="text-xl font-bold tracking-wide">🌊 Sea Safetly</h1>
         </div>
+
+        {/* Mobile toggle */}
         <div className="lg:hidden">
           <button onClick={() => setIsOpen(!isOpen)} aria-label="Toggle Menu">
             {isOpen ? <X size={28} /> : <Menu size={28} />}
@@ -48,21 +46,39 @@ export function Navbar({ user }: NavbarProps) {
 
         {/* Desktop Menu */}
         <nav className="hidden lg:flex gap-6 items-center">
-          <Link href="/">Dashboard</Link>
-          <Link href="/psychology">Psychological Help</Link>
-          <Link href="/admin">Admin</Link>
+          <Link href="/" className="hover:text-yellow-600">
+            Dashboard
+          </Link>
+          <Link href="/psychology" className="hover:text-yellow-600">
+            Psychological Help
+          </Link>
+          <Link href="/admin" className="hover:text-yellow-600">
+            Admin
+          </Link>
+
           {user ? (
             <>
-              <Link href="/tutorials">Tutorials</Link>
-              <Link href="/materials">Materials</Link>
-              <form action={formAction}>
-                <button
-                  type="submit"
-                  className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
-                >
-                  Logout
-                </button>
-              </form>
+              <Link href="/tutorials" className="hover:text-yellow-600">
+                Tutorials
+              </Link>
+              <Link href="/materials" className="hover:text-yellow-600">
+                Materials
+              </Link>
+
+              {/* Show user name */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md border-l-1 border-r-1">
+                <User size={18} className="text-blue-400" />
+                <span className="font-medium ">{user.name || user.email}</span>
+                {/* Logout button */}
+                <form action={formAction}>
+                  <button
+                    type="submit"
+                    className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
+                  >
+                    Logout
+                  </button>
+                </form>
+              </div>
             </>
           ) : (
             <>
@@ -85,36 +101,61 @@ export function Navbar({ user }: NavbarProps) {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="fixed inset-0 bg-white dark:bg-zinc-900 flex flex-col items-center justify-center gap-6 text-xl font-medium z-40 transition-all">
-          <Link href="/" onClick={() => setIsOpen(false)}>
+        <div className="fixed inset-0 bg-zinc-900 flex flex-col items-center justify-center gap-6 text-xl font-medium z-40 transition-all">
+          <Link
+            href="/"
+            className="hover:text-yellow-600"
+            onClick={() => setIsOpen(false)}
+          >
             Dashboard
           </Link>
-          <Link href="/psychology" onClick={() => setIsOpen(false)}>
+          <Link
+            href="/psychology"
+            className="hover:text-yellow-600"
+            onClick={() => setIsOpen(false)}
+          >
             Psychological Help
           </Link>
-          <Link href="/admin" onClick={() => setIsOpen(false)}>
+          <Link
+            href="/admin"
+            className="hover:text-yellow-600"
+            onClick={() => setIsOpen(false)}
+          >
             Admin
           </Link>
 
           {user ? (
             <>
-              <Link href="/tutorials" onClick={() => setIsOpen(false)}>
+              <Link
+                href="/tutorials"
+                className="hover:text-yellow-600"
+                onClick={() => setIsOpen(false)}
+              >
                 Tutorials
               </Link>
-              <Link href="/materials" onClick={() => setIsOpen(false)}>
+              <Link
+                href="/materials"
+                className="hover:text-yellow-600"
+                onClick={() => setIsOpen(false)}
+              >
                 Materials
               </Link>
-              <form
-                action={formAction}
-                onSubmit={() => setIsOpen(false)} // ✅ closes the menu before logout
-              >
-                <button
-                  type="submit"
-                  className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
-                >
-                  Logout
-                </button>
-              </form>
+
+              {/* Show user name on mobile */}
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md border-l-1 border-r-1">
+                <User size={20} className="text-blue-400 " />
+                <span className="font-medium text-gray-800 dark:text-gray-200">
+                  {user.name || user.email}
+                </span>
+                <form action={formAction} onSubmit={() => setIsOpen(false)}>
+                  <button
+                    type="submit"
+                    className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition"
+                  >
+                    Logout
+                  </button>
+                </form>
+              </div>
             </>
           ) : (
             <>
