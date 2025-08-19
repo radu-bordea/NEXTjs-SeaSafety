@@ -36,6 +36,8 @@ const TutorialsPage = async () => {
 
   // ✅ Centralized admin check
   const canManage = isAdmin(user?.email);
+  console.log(canManage);
+  
 
   return (
     <div className="min-h-screen w-full px-8 py-8">
